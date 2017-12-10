@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
 VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Flight-Booking System", "Flight-Booking System\Flight-Booking System.vcxproj", "{542F1E4D-B0DF-4520-BE64-11D5EA2210D0}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Railways-Booking System", "Railways-Booking System\Railways-Booking System.vcxproj", "{ED5B29CE-4D26-4C42-94B5-5BD8559904D9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -13,14 +13,14 @@ Global
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{542F1E4D-B0DF-4520-BE64-11D5EA2210D0}.Debug|x64.ActiveCfg = Debug|x64
-		{542F1E4D-B0DF-4520-BE64-11D5EA2210D0}.Debug|x64.Build.0 = Debug|x64
-		{542F1E4D-B0DF-4520-BE64-11D5EA2210D0}.Debug|x86.ActiveCfg = Debug|Win32
-		{542F1E4D-B0DF-4520-BE64-11D5EA2210D0}.Debug|x86.Build.0 = Debug|Win32
-		{542F1E4D-B0DF-4520-BE64-11D5EA2210D0}.Release|x64.ActiveCfg = Release|x64
-		{542F1E4D-B0DF-4520-BE64-11D5EA2210D0}.Release|x64.Build.0 = Release|x64
-		{542F1E4D-B0DF-4520-BE64-11D5EA2210D0}.Release|x86.ActiveCfg = Release|Win32
-		{542F1E4D-B0DF-4520-BE64-11D5EA2210D0}.Release|x86.Build.0 = Release|Win32
+		{ED5B29CE-4D26-4C42-94B5-5BD8559904D9}.Debug|x64.ActiveCfg = Debug|x64
+		{ED5B29CE-4D26-4C42-94B5-5BD8559904D9}.Debug|x64.Build.0 = Debug|x64
+		{ED5B29CE-4D26-4C42-94B5-5BD8559904D9}.Debug|x86.ActiveCfg = Debug|Win32
+		{ED5B29CE-4D26-4C42-94B5-5BD8559904D9}.Debug|x86.Build.0 = Debug|Win32
+		{ED5B29CE-4D26-4C42-94B5-5BD8559904D9}.Release|x64.ActiveCfg = Release|x64
+		{ED5B29CE-4D26-4C42-94B5-5BD8559904D9}.Release|x64.Build.0 = Release|x64
+		{ED5B29CE-4D26-4C42-94B5-5BD8559904D9}.Release|x86.ActiveCfg = Release|Win32
+		{ED5B29CE-4D26-4C42-94B5-5BD8559904D9}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
