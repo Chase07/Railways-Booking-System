@@ -1,11 +1,13 @@
 #ifndef Tools
 #define Tools
+#define _CRT_SECURE_NO_WARNINGS
 
 #include<string>
 #include<vector>
 #include<unordered_set>
 #include<iostream>
 #include<sstream>
+#include<ctime>
 #include<conio.h>
 
 class String_Manipulation
@@ -16,7 +18,9 @@ public :
 public :
 	String_Manipulation() = default;
 	String_Manipulation(const std::string& source);
-	void chopping(const std::string& cut);
+	void add_piece(const std::string& piece);
+	void washing(std::string& dirty_str);
+	void chopping(const std::string& cut = " \t\r\n", const unsigned& choise = 1);
 	void chop_into_char();
 	std::string sewing(const std::string& thread);
 	template <typename T>
@@ -26,7 +30,9 @@ public :
 private :
 	std::string str;
 	std::string cut;
+	std::string whitespaces = " \t\r\n";
 private :
+	
 };
 template <typename T>
 std::string String_Manipulation::num_to_str(const T& number)
@@ -40,16 +46,30 @@ std::string String_Manipulation::num_to_str(const T& number)
 class Input_Control
 {
 public :
-	Input_Control(const std::string& accept_char, const unsigned& amount);
-	Input_Control(const char& beg_char, const char& end_char, const unsigned& amount);
+	Input_Control();
+	Input_Control(
+		const std::string& accept_char, 
+		const unsigned& amount);
+	Input_Control(
+		const char& beg_char, 
+		const char& end_char, 
+		const unsigned& amount);
 	std::istringstream& filtered_in(std::istream& in = std::cin);
 	void set_accept_char(
 		const std::string& accept_char);
 	void set_accept_range(
 		const char& beg_char, 
 		const char& end_char);
+	void add_accept_char(
+		const char& accept_char);
+	void add_accept_char(
+		const std::string& accept_chars);
+	void add_accept_range(
+		const char& beg_char,
+		const char& end_char);
 	void set_accept_amount(
 		const unsigned& amount);
+	
 	void set_echo(const char& echo);
 private :
 	std::unordered_set<char> accept;
@@ -60,5 +80,15 @@ private :
 
 private :
 	void clear();
+};
+class Time
+{
+public :
+	std::string date;
+	std::string date_and_now;
+public :
+	Time();
+private :
+	void set_time();
 };
 #endif // Tools

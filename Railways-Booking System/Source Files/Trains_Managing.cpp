@@ -16,13 +16,15 @@ Station::Station(
 Box::Box(
 	const std::string& seat_type,
 	const unsigned& number,
-	const unsigned& seat_account,
+	const unsigned& seat_left,
+	const unsigned& seat_amount,
 	const double& seat_price) :
 	seat_type(seat_type),
 	number(number),
-	seat_account(seat_account),
+	seat_left(seat_left),
+	seat_amount(seat_amount),
 	seat_price(seat_price) {}
-Seats::Seats(const std::string& type,
+Seat::Seat(const std::string& type,
 	const unsigned& seat_left,
 	const double& price) : 
 	type(type), 
@@ -43,23 +45,57 @@ Train::Train(
 	boxes_file(boxes_file){
 	read_in();
 }
-//unsigned Train::sum_seat(const std::string& seat_type)
-//{
-//	unsigned temp_sum(0);
-//	for (auto& box : this->boxes)
-//	{
-//		if(box.seat_type == seat_type)
-//		{
-//			temp_sum += box.seat_account;
-//		}
-//	}
-//	return temp_sum;
-//}
-Trains::Trains(
-	const std::string& trains_file) :
+Seat* Train::find_seat_type(const std::string& seat_type)
+{
+	for (auto& curr_seats : seats)
+	{
+		if (curr_seats.type == seat_type)
+		{ return &curr_seats; }
+	}
+	return nullptr;
+}
+Box* Train::find_box(const std::string& seat_type)
+{
+	for (auto& curr_box : boxes)
+	{
+		if (curr_box.seat_type == seat_type && curr_box.seat_left != 0) 
+		{ return &curr_box; }
+	}
+	return nullptr;
+}
+Trains::Trains(const std::string& trains_file) :
 	trains_file(trains_file) {
 	read_in();
 }
+Train* Trains::find_train(const std::string& train_number)
+{
+	for (auto& train : trains)
+	{
+		if (train.number == train_number) { return &train; }
+	}
+	return nullptr;
+}
+Ticket::Ticket(
+	const std::string passenger_name,
+	const std::string train_number,
+	const std::string departure_station,
+	const std::string terminal_station,
+	const std::string departure_time,
+	const std::string terminal_time,
+	const std::string box_number,
+	const std::string seat_number,
+	const std::string seat_type,
+	const std::string seat_price):
+	 passenger_name(passenger_name),
+	 train_number(train_number),
+	 departure_station(departure_station),
+	 terminal_station(terminal_station),
+	 departure_time(departure_time),
+	 terminal_time(terminal_time),
+	 box_number(box_number),
+	 seat_number(seat_number),
+	 seat_type(seat_type),
+	 seat_price(seat_price) {}
 /*
  * Private Part
  */
@@ -69,98 +105,106 @@ void Train::read_in() {
 	*/
 	string temp_line;
 	boxes_data.open(boxes_file, fstream::in);
-	if (boxes_data.fail()) { cerr << "\nFail to open Boxes.txt!"; }
-	while (getline(boxes_data, temp_line))
-	{
-		String_Manipulation SM(temp_line);
-		SM.chopping(" ");
-		if (SM.pieces.size() == 13)
-		{
-			if (SM.pieces.at(0) == number)
-			{
-				unsigned temp_boxes_account(0);
-				unsigned box_number(0);
-				for (unsigned index = 2; index != 14; index += 4)
-				{
-					temp_boxes_account = stoi(SM.pieces.at(index));
-					for (unsigned i = 0; i != temp_boxes_account; ++i)
-					{
-						boxes.push_back(
-							Box(
-							SM.pieces.at(index - 1),
-							++box_number,
-							stoul(SM.pieces.at(index + 1)),
-							stod(SM.pieces.at(index + 2))
-							)
-						);
-					}
-				}
-				break;
-			}
-			else {
-				continue;
-			}
-		}
-		else
-		{
-			cerr << "\nWrong infomations occur in boxes.txt!";
-			cerr << "\nNow program is end up, hitting any key to continue...";
-			_getch();
-			boxes_data.close();
-			_exit(1);
-		}
+	if (boxes_data.fail()) 
+	{ 
+		cerr << "\nFail to open " + boxes_file + "!"; 
+		cout << "\nPLZ check the data file, hitting any key to exit...";
+		_getch();
+		_exit(1);
 	}
-	boxes_data.close();
+	else {
+		while (getline(boxes_data, temp_line))
+		{
+			String_Manipulation SM(temp_line);
+			SM.chopping();
+			if (SM.pieces.size() == 5)
+			{
+				boxes.push_back(Box(
+						SM.pieces.at(0),
+						stoul(SM.pieces.at(1)),
+						stoul(SM.pieces.at(2)),
+						stoul(SM.pieces.at(3)),
+						stod(SM.pieces.at(4))			
+					));
+			}
+			else
+			{
+				boxes_data.close();
+				cerr << "\nWrong infomations occur in " + boxes_file + "!";
+				cerr << "\nNow program is end up, hitting any key to continue...";
+				_getch();				
+				_exit(1);
+			}
+		}
+		boxes_data.close();
+	}
+
 	/*
 	Initialize the vector of Seats
 	*/
 	string prev_type("");
 	unsigned temp_seat_left(0);
 	double prev_seat_price(0);
-	// Problem Here: In list, having no way to konw whether curr is the last element
-	for (auto& curr : boxes)
+	// Noisy problem Here: In list, having no way to konw whether curr is the last element
+	for (auto& curr_box : boxes)
 	{
-		prev_type == "" ? prev_type = curr.seat_type : prev_type;
-		prev_seat_price == 0 ? prev_seat_price = curr.seat_price : prev_seat_price;
-		if (curr.seat_type == prev_type)
+		prev_type == "" ? prev_type = curr_box.seat_type : prev_type;
+		prev_seat_price == 0 ? prev_seat_price = curr_box.seat_price : prev_seat_price;
+		if (curr_box.seat_type == prev_type)
 		{
-			temp_seat_left += curr.seat_account;
+			temp_seat_left += curr_box.seat_left;
 		}
 		else
 		{
-			seats.push_back(Seats(
+			seats.push_back(Seat(
 				prev_type,
 				temp_seat_left,
 				prev_seat_price)
 			);
-			prev_type = curr.seat_type;
-			temp_seat_left = curr.seat_account;
-			prev_seat_price = curr.seat_price;
+			prev_type = curr_box.seat_type;
+			temp_seat_left = curr_box.seat_left;
+			prev_seat_price = curr_box.seat_price;
 		}	
 	}
 	// Add the last type of seat
-	seats.push_back(Seats(boxes.back().seat_type, temp_seat_left, boxes.back().seat_price));
+	seats.push_back(Seat(boxes.back().seat_type, temp_seat_left, boxes.back().seat_price));
 }
 void Trains::read_in() {
 	string temp_line;
 	trains_data.open(trains_file, fstream::in);
-	if (trains_data.fail()) { cerr << "\nFail to open Trains.txt!"; }
-	while (getline(trains_data, temp_line))
+	if (trains_data.fail())
 	{
-		String_Manipulation SM(temp_line);
-		SM.chopping(" ");
-		if (SM.pieces.size() == 7)
+		cerr << "\nFail to open " + trains_file + "!";
+		cout << "\nPLZ check the data file, hitting any key to exit...";
+		_getch();
+		_exit(1);
+	}
+	else
+	{
+		while (getline(trains_data, temp_line))
 		{
-			trains.push_back(Train(SM.pieces.at(0), SM.pieces.at(1), SM.pieces.at(2), SM.pieces.at(3), SM.pieces.at(4), "Data Files/Trains_Info/Boxes.txt"));
+			String_Manipulation SM(temp_line);
+			SM.chopping();
+			if (SM.pieces.size() == 5)
+			{
+				trains.push_back(Train(
+					SM.pieces.at(0),
+					SM.pieces.at(1),
+					SM.pieces.at(2),
+					SM.pieces.at(3),
+					SM.pieces.at(4),
+					"Data Files/Trains_Info/Boxes/" + SM.pieces.at(0) + "_boxes.txt"
+				));
+			}
+			else
+			{
+				trains_data.close();
+				cerr << "\nWrong infomations occur in " + trains_file + "!";
+				cout << "\nNow program is end up, hitting any key to continue...";
+				_getch();			
+				_exit(1);
+			}
 		}
-		else
-		{
-			cerr << "\nWrong infomations occur in Trains.txt!";
-			cerr << "\nNow program is end up, hitting any key to continue...";
-			_getch();
-			trains_data.close();
-			_exit(1);
-		}	
 	}
 	trains_data.close();
 }

@@ -67,6 +67,6 @@ void Interface::trainsIF(std::list<const Train*> suited_trains) const
 			<< setw(16) << SM.num_to_str(train->seats.at(2).price) << endl;
 		cout << endl;
 	}
-	_getch();
+	
 }
 

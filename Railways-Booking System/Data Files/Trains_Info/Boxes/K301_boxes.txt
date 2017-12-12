@@ -1,0 +1,17 @@
+hard_seat 1 98 98 135.5
+hard_seat 2 98 98 135.5
+hard_seat 3 98 98 135.5
+hard_seat 4 98 98 135.5
+hard_seat 5 98 98 135.5
+hard_seat 6 98 98 135.5
+hard_seat 7 98 98 135.5
+hard_seat 8 98 98 135.5
+hard_seat 9 98 98 135.5
+hard_seat 10 98 98 135.5
+berth 11 20 20 232.5
+berth 12 20 20 232.5
+berth 13 20 20 232.5
+berth 14 20 20 232.5
+cushioned_berth 15 15 15 414.5
+cushioned_berth 16 15 15 414.5
+cushioned_berth 17 15 15 414.5

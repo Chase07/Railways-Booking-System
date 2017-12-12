@@ -7,12 +7,21 @@
 using namespace::std;
 int main()
 {
-	/*Input_Control IC('!', '~', 3);
+	/*Input_Control IC('!', '~', 20);
+	IC.add_accept_char(' ');
 	string temp_str;
 	cout << "PLZ input something:";
-	IC.filtered_in(cin) >> temp_str;
-	cout << endl;
-	cout << temp_str;*/
+	while (true)
+	{
+		getline(IC.filtered_in(), temp_str);
+		cout << temp_str << endl;
+	}*/
+
+	/*string str("	 abc@@@babab@@@@@a@@fdasf@@fa@@fda  ");
+	String_Manipulation SM(str);
+	SM.chopping("@@");*/
+
+	
 
 	System RBS;
 	RBS.Run();

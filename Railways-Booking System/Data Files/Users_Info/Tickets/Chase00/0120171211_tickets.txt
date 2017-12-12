@@ -1,0 +1,2 @@
+JB_Li K301 Nanchang Guangzhou 02:07 15:14 3 1 hard_seat 135.5
+JB_Li K301 Nanchang Guangzhou 02:07 15:14 3 2 hard_seat 135.5

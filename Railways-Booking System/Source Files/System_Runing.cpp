@@ -50,19 +50,30 @@ void System::main_meun_option()
 				1.Searh Trains
 				*/			
 				search_trains();
+
 				continue;
 			}
 			case 2: {
+				/*
+				2.Login
+				*/
 				system("cls");
 				login();		
 				continue;
 			}
 			case 3: {
+				/*
+				3.Sign up
+				*/
 				system("cls");
 				sign_up();
 				continue;
 			}
 			case 4: {
+				/*
+				4.Update and exit
+				*/
+				update_files();
 				exit_system();
 				continue;
 			}
@@ -110,10 +121,18 @@ void System::manager_meun_option()
 				continue;
 			}
 			case 4: {
+				/*
+				4.Return to Main-menu
+				*/
+				curr_manager = nullptr;
 				main_meun_option();
 				continue;
 			}
 			case 5: {
+				/*
+				5.Update and exit
+				*/
+				update_files();
 				exit_system();
 				continue;
 			}
@@ -158,10 +177,18 @@ void System::passneger_meun_option()
 				continue;
 			}
 			case 4: {
+				/*
+				4.Return to Main-menu
+				*/
+				curr_passenger = nullptr;
 				main_meun_option();
 				continue;
 			}
 			case 5: {
+				/*
+				5.Update and exit
+				*/
+				update_files();
 				exit_system();
 				continue;
 			}
@@ -215,6 +242,7 @@ void System::sign_up()
 	Input_Control IC("YyNn", 1);
 	string temp_password;
 	string status;
+
 	cout << "\nFirst input your name:";
 	cin >> status;
 	if (status == "0668")
@@ -246,9 +274,14 @@ void System::sign_up()
 			// Password is verified
 			if (status == "0668")
 			{
-				// New user is a manager
-				users.managers.push_back(Manager(new_user.name, new_user.password, users.generate_job_number()));
-				curr_manager = check_id(new_user, users.managers);
+				// The new user is a manager
+				users.managers.push_back(Manager(
+					new_user.name, 
+					new_user.password, 
+					users.generate_job_number()
+				));
+				/////////////////
+				curr_manager = get_id(new_user, users.managers);
 				if (curr_manager != nullptr)
 				{				
 					cout << "\n\nThe resistration is successful! Hit any key to menu...";
@@ -263,9 +296,12 @@ void System::sign_up()
 			}
 			else
 			{
-				// New user is a passenger
-				users.passengers.push_back(Passenger(new_user.name, new_user.password));
-				curr_passenger = check_id(new_user, users.passengers);
+				// The new user is a passenger
+				users.passengers.push_back(Passenger(
+					new_user.name,
+					new_user.password
+				));
+				curr_passenger = get_id(new_user, users.passengers);
 				if (curr_passenger != nullptr)
 				{				
 					cout << "\n\nThe resistration is successful! Hit any key to menu...";
@@ -294,13 +330,11 @@ void System::search_trains() {
 		if (user_decision == "Y" || user_decision == "y") { /*Do Nothing*/ }
 		else if (user_decision == "N" || user_decision == "n") { return; }
 	}
-	
 	cout << "\n\nPLZ input the departure:";
 	cin >> departure;
 	cout << "\nPLZ input the terminal:";
 	cin >> terminal;
 	search_trains(departure, terminal);
-
 }
 void System::search_trains(std::string& departure, std::string& terminal) {
 	list<const Train*> suited_trains;
@@ -314,6 +348,15 @@ void System::search_trains(std::string& departure, std::string& terminal) {
 	if (suited_trains.size() != 0)
 	{
 		Infa.trainsIF(suited_trains);
+		if(curr_passenger != nullptr)
+		{
+			curr_passenger->book_trains(&trains);
+		}
+		if (curr_passenger == nullptr)
+		{
+			cout << "You can hit any key at any time to return main menu...";
+			_getch();
+		}
 	}
 	else 
 	{
@@ -323,3 +366,9 @@ void System::search_trains(std::string& departure, std::string& terminal) {
 	
 }
 void System::exit_system() { _exit(0); }
+void System::update_files()
+{
+
+
+
+}

@@ -36,12 +36,30 @@ private :
 	void login();
 	void sign_up();
 	void search_trains();
-	void search_trains(std::string& departure, std::string& terminal);
+	void search_trains(
+		std::string& departure, 
+		std::string& terminal);
+	void update_files();
 	void exit_system();
-	void update_file();
-	template <typename T> T* check_id(User& curr_user, std::vector<T>& users);
+	
+	template <typename T> T* get_id(
+		User& curr_user,
+		std::vector<T>& users);
+	template <typename T> T* check_id(
+		User& curr_user, 
+		std::vector<T>& users);
 
 };
+template <typename T> T* System::get_id(User& curr_user,
+	std::vector<T>& users)
+{
+	for (auto& user : users)
+	{
+		if (user.name == curr_user.name)
+		{ return &user;	}
+	}
+	return nullptr;
+}
 template <typename T> T* System::check_id(User& curr_user, std::vector<T>& users)
 {
 	Input_Control IC("YNyn", 1);

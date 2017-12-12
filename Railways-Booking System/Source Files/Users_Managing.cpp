@@ -54,13 +54,153 @@ void User::change_password()
 		}		
 	}	
 }
-/*
-等待修改
-*/
+Passenger::Passenger(
+	const std::string& name,
+	const std::string& password) :
+	User(name, password),
+	order_amount(0) {}
 Passenger::Passenger(
 	const std::string& name, 
-	const std::string& password) : 
-	User(name, password) {}
+	const std::string& password,
+	const std::string& orders_file) :
+	User(name, password),
+	orders_file(orders_file) {
+	read_in();
+}
+void Passenger::book_trains(Trains* curr_trains)
+{
+	Input_Control IC1;
+	IC1.set_accept_amount(16);
+	IC1.add_accept_range('0', '9');
+	IC1.add_accept_range('A', 'Z');
+	IC1.add_accept_range('a', 'z');
+	IC1.add_accept_char("_");
+
+	Input_Control IC2('1', '9', 1);
+	IC2.add_accept_char(27);
+	Input_Control IC3("YyNn", 1);
+	String_Manipulation SC;
+
+	Train* booking_train(nullptr);
+	Box* booking_box(nullptr);
+	Seat* booking_seat;
+	unsigned ticket_amount;
+
+	//cout << "Tips: At any time, you can just press [ESC] to cancel booking...";
+	/*
+	Select the train
+	*/
+	while (true)
+	{
+		cout << "\nPLZ select the train number:";
+		booking_train = curr_trains->find_train(IC1.filtered_in().str());
+		if (booking_train != nullptr)
+		{
+			/*
+			Select the seat_type
+			*/
+			while (true)
+			{
+				cout << "\nPLZ select the seat type:";
+				booking_seat = booking_train->find_seat_type(IC1.filtered_in().str());
+				if (booking_seat == nullptr)
+				{
+					cerr << "\nNo such seat type...";
+					cout << "\nWould you want to retry?[Y/N]:";
+					IC3.filtered_in() >> user_decision;
+					if (user_decision.at(0) == 'Y' || user_decision.at(0) == 'y') { continue; }
+					else if (user_decision.at(0) == 'N' || user_decision.at(0) == 'n') { break; }
+				}
+				else if (booking_seat != nullptr && booking_seat->seat_left == 0)
+				{
+					cerr << "This type of seat has no more seats...";
+					cout << "\nWould you want to retry?[Y/N]:";
+					IC3.filtered_in() >> user_decision;
+					if (user_decision.at(0) == 'Y' || user_decision.at(0) == 'y') { continue; }
+					else if (user_decision.at(0) == 'N' || user_decision.at(0) == 'n') { break; }
+				}
+				else if(booking_seat != nullptr && booking_seat->seat_left > 0)
+				{
+					/*
+					Purchase the tickets
+					*/
+					while (true)
+					{
+						cout << "\nHow many tickets do you want:";
+						ticket_amount = stoul(IC2.filtered_in().str());
+						if (ticket_amount <= booking_seat->seat_left)
+						{
+							IC1.set_accept_range('A', 'Z');
+							IC1.add_accept_range('a', 'z');
+							IC1.add_accept_char(' ');
+							IC1.set_accept_amount(20);// The length of passenger's name
+							string passenger_name;
+							vector<Ticket> temp_tickets;
+
+							/*
+							Verify and draw each ticket  
+							*/
+							for (unsigned counter = 0; counter != ticket_amount; ++counter)
+							{
+								// In normally, here the booking_box must not to be nullptr 
+								booking_box = booking_train->find_box(booking_seat->type);
+								if (booking_box != nullptr)
+								{
+									cout << "\nPLZ type in the No." + SC.num_to_str(counter + 1) + " passenger's name:";
+									getline(IC1.filtered_in(), passenger_name);
+									temp_tickets.push_back(Ticket(//何处存放
+										passenger_name,
+										booking_train->number,
+										booking_train->departure_station,
+										booking_train->terminal_station,
+										booking_train->departure_time,
+										booking_train->terminal_time,
+										SC.num_to_str(booking_box->number),
+										SC.num_to_str((booking_box->seat_amount + 1) - booking_box->seat_left),// generate the seat_number
+										booking_box->seat_type,
+										SC.num_to_str(booking_box->seat_price)
+									));
+									booking_box->seat_left - 1 != 4294967295 ? --booking_box->seat_left : booking_box->seat_left/*Do nothing*/;
+									booking_seat->seat_left - 1 != 4294967295 ? --booking_seat->seat_left : booking_seat->seat_left/*Do nothing*/;
+								}
+								else
+								{
+									cerr << "Fatal error have occured in drawing ticket, system will exit now, hitting any key to continue...";
+									_getch();
+									_exit(1);
+								}
+							}
+							// Add an order
+							orders.push_back(Order(++order_amount, temp_tickets));
+							cout << "\nYour reservation is successful!";
+							cout << "\nHitting any key to return main menu...";
+							_getch();
+							break;
+						}
+						else
+						{
+							cerr << "This type of seat has only " + SC.num_to_str(booking_seat->seat_left) + " ticket(s)...";
+							cout << "\nWould you want to retry?[Y/N]:";
+							IC3.filtered_in() >> user_decision;
+							if (user_decision.at(0) == 'Y' || user_decision.at(0) == 'y') { continue; }
+							else if (user_decision.at(0) == 'N' || user_decision.at(0) == 'n') { break; }
+						}
+					}
+					break;
+				}
+			}	
+			break;
+		}
+		else{
+			cerr << "\nYou have selected the nonexistent train...";
+			cerr << "\nWould you want to retry?[Y/N]:";
+			IC3.filtered_in() >> user_decision;
+			if (user_decision.at(0) == 'Y' || user_decision.at(0) == 'y') { continue; }
+			else if (user_decision.at(0) == 'N' || user_decision.at(0) == 'n') { break; }
+		}
+	}	
+
+}
 Manager::Manager(
 	const std::string& name, 
 	const std::string& password, 
@@ -73,86 +213,216 @@ Users::Users(
 	passengers_file(passengers_file), 
 	managers_file(managers_file) {
 	read_in();
-	manager_account = managers.size();
+	passenger_amount = static_cast<unsigned>(passengers.size());
+	manager_amount = static_cast<unsigned>(managers.size());
 }
 string Users::generate_job_number()
 {
-	time_t now = time(nullptr);
-	tm* local_time = localtime(&now);
-	String_Manipulation SM;
-	string personal_code( SM.num_to_str(manager_account) );
-	string month_code = ( SM.num_to_str(local_time->tm_mon + 1) );
-	string day_code = ( SM.num_to_str(local_time->tm_mday) );
-
-	if (personal_code.size() != 2) 
-	{ SM.extend_str(personal_code, "0"); }
-	SM.pieces.push_back(personal_code);
-
-	SM.pieces.push_back(SM.num_to_str(local_time->tm_year + 1900));
+	Time now;
+	String_Manipulation SM1;
+	String_Manipulation SM2(now.date);
+	string personal_code(SM1.num_to_str(++manager_amount));
 	
-	if (month_code.size() != 2)
+	personal_code.size() == 2 ?
+		SM1.add_piece(personal_code) :
+		SM1.add_piece(SM1.extend_str(personal_code, "0"));
+	SM2.chopping("-:");
+	for (auto& curr_piece : SM2.pieces)
 	{
-		SM.extend_str(month_code, "0");
+		SM1.add_piece(curr_piece);
 	}
-	SM.pieces.push_back(month_code);
-	
-	if (day_code.size() != 2)
-	{
-		SM.extend_str(day_code, "0");
-	}
-	SM.pieces.push_back(day_code);
-	
-	return SM.sewing("");
+	return SM1.sewing("");
+}Order::Order(
+	const std::string& order_number,
+	const std::string& booking_time,
+	const std::string& tickets_file):
+	order_number(order_number),
+	booking_time(booking_time),
+	tickets_file(tickets_file){
+	read_in();
 }
-/*
- * Protected Part
- */
-
+Order::Order(
+	unsigned& order_amount,
+	const std::vector<Ticket> tickets) :
+	order_number(generate_order_number(order_amount)),
+	booking_time(generate_booking_time()),
+	tickets(tickets){}
 
 /*
  * Private Part
  */
+std::string Order::generate_order_number(unsigned& passenger_order_amount)
+{
+	Time now;
+	String_Manipulation SM1;
+	String_Manipulation SM2(now.date);
+	string order_code(SM1.num_to_str(passenger_order_amount));
+
+	order_code.size() == 2 ?
+		SM1.add_piece(order_code) :
+		SM1.add_piece(SM1.extend_str(order_code, "0"));
+	SM2.chopping("-:");
+	for (auto& curr_piece : SM2.pieces)
+	{
+		SM1.add_piece(curr_piece);
+	}
+	return SM1.sewing("");
+
+}
+std::string Order::generate_booking_time()
+{
+	Time now;
+	return now.date_and_now;
+}
 void Users::read_in()
 {
 	string temp_line;
+	/*
+	Read in the passengers_data
+	*/
 	users_data.open(passengers_file, fstream::in);
-	if (users_data.fail()) { cerr << "\nFail to open passengers.txt!"; }
-	while (getline(users_data, temp_line))
-	{
-		String_Manipulation SM(temp_line);
-		SM.chopping(" ");
-		if (SM.pieces.size() == 2)
-		{
-			passengers.push_back(Passenger(SM.pieces.at(0), SM.pieces.at(1)));
-		}
-		else
-		{
-			cerr << "\nWrong infomations occur in passengers.txt!";
-			cerr << "\nNow program is end up, hitting any key to continue...";
-			_getch();
-			exit( 1 );
-		}
+	if (users_data.fail()) 
+	{ 
+		cerr << "\nFail to open " + passengers_file + "!";
+		cout << "\nPLZ check the data file, hitting any key to exit...";
+		_getch();
+		_exit(1);
 	}
-	users_data.close();
-
+	else 
+	{
+		while (getline(users_data, temp_line))
+		{
+			String_Manipulation SM(temp_line);
+			SM.chopping();
+			if (SM.pieces.size() == 2)
+			{
+				passengers.push_back(Passenger(
+					SM.pieces.at(0),
+					SM.pieces.at(1),
+					"Data Files/Users_Info/Orders/" + SM.pieces.at(0) + "_orders.txt"
+				));
+			}
+			else
+			{
+				users_data.close();
+				cerr << "\nWrong infomations occur in  " + passengers_file + "!";
+				cout << "\nNow program is end up, hitting any key to continue...";
+				_getch();
+				exit(1);
+			}
+		}
+		users_data.close();
+	}
+		
+	/*
+	Read in the passengers_data
+	*/
 	users_data.open(managers_file, fstream::in);
-	if (users_data.fail()) { cerr << "\nFail to open managers.txt!"; }
-	while (getline(users_data, temp_line))
+	if (users_data.fail())
+	{ 
+		cerr << "\nFail to open " + managers_file + " !";
+		cout << "\nPLZ check the data file, hitting any key to exit...";
+		_getch();
+		_exit(1);
+	}
+	else 
+	{
+		while (getline(users_data, temp_line))
+		{
+			String_Manipulation SM(temp_line);
+			SM.chopping();
+			if (SM.pieces.size() == 3)
+			{
+				managers.push_back(Manager(SM.pieces.at(0), SM.pieces.at(1), SM.pieces.at(2)));
+			}
+			else
+			{
+				users_data.close();
+				cerr << "\nWrong infomations occur in " + managers_file + " !";
+				cerr << "\nNow program is end up, hitting any key to continue...";
+				_getch();
+				exit(1);
+			}
+		}
+		users_data.close();
+	}
+}
+void Passenger::read_in() {
+	/*
+	Read in the orders_data
+	*/
+	string temp_line;
+	orders_data.open(orders_file, fstream::in);
+	if (orders_data.fail())
+	{
+		order_amount = 0;
+	}
+	else
+	{
+		while (getline(orders_data, temp_line))
+		{
+			String_Manipulation SM(temp_line);
+			SM.chopping();
+			if (SM.pieces.size() == 2)
+			{
+				orders.push_back(Order(
+				SM.pieces.at(0),
+				SM.pieces.at(1),
+				"Data Files/Users_Info/Tickets/" + name	+ "/" + SM.pieces.at(0) + "_tickets.txt"
+				));
+			}
+			else
+			{
+				orders_data.close();
+				cerr << "\nWrong infomations occur in " + orders_file + "!";
+				cerr << "\nNow program is end up, hitting any key to continue...";
+				_getch();
+				exit(1);
+			}
+		}
+		order_amount = static_cast<unsigned>(orders.size());
+		orders_data.close();
+	}
+}
+
+void Order::read_in()
+{
+	string temp_line;
+	tickets_data.open(tickets_file, fstream::in);
+	if (tickets_data.fail())
+	{
+		cerr << "\nFail to open " + tickets_file + "!";
+		cout << "\nPLZ check the data file, hitting any key to exit...";
+		_getch();
+		_exit(1);
+	}
+	while (getline(tickets_data, temp_line))
 	{
 		String_Manipulation SM(temp_line);
-		SM.chopping(" ");
-		if (SM.pieces.size() == 3)
+		SM.chopping();
+		if (SM.pieces.size() == 10)
 		{
-			managers.push_back(Manager(SM.pieces.at(0), SM.pieces.at(1), SM.pieces.at(2)));
+			tickets.push_back(Ticket(
+				SM.pieces.at(0),
+				SM.pieces.at(1),
+				SM.pieces.at(2),
+				SM.pieces.at(3), 
+				SM.pieces.at(4),
+				SM.pieces.at(5),
+				SM.pieces.at(6),
+				SM.pieces.at(7),
+				SM.pieces.at(8),
+				SM.pieces.at(9)
+			));
 		}
 		else
 		{
-			cerr << "\nWrong infomations occur in managers.txt!";
+			tickets_data.close();
+			cerr << "\nWrong infomations occur in " + tickets_file + "!";
 			cerr << "\nNow program is end up, hitting any key to continue...";
 			_getch();
-			users_data.close();
-			exit( 1 );
-		}	
+			exit(1);
+		}
 	}
-	users_data.close();
+	tickets_data.close();
 }

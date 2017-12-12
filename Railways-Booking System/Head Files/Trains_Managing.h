@@ -31,19 +31,21 @@ public:
 	// hard_seat, berth, cushioned_berth
 	std::string seat_type;
 	unsigned number;
-	unsigned seat_account;
+	unsigned seat_left;
+	unsigned seat_amount;
 	double seat_price;
 
 public :
 	Box(const std::string& seat_type,
 		const unsigned& number,
-		const unsigned& seat_account,
+		const unsigned& seat_left,
+		const unsigned& seat_amount,
 		const double& seat_price);
 	
-private :
-	std::string train_number;
+//private :
+//	std::string train_number;
 };
-class Seats
+class Seat
 {
 public :
 	std::string type;
@@ -51,7 +53,7 @@ public :
 	double price;
 
 public :
-	Seats(const std::string& type, const unsigned& seat_left, const double& price);
+	Seat(const std::string& type, const unsigned& seat_left, const double& price);
 };
 class Train
 {
@@ -62,7 +64,7 @@ public :
 	std::string departure_time;
 	std::string terminal_time;
 	std::list<Box> boxes;
-	std::vector<Seats> seats;
+	std::vector<Seat> seats;
 	//std::list<Station> way_stations;
 public :
 	Train(const std::string& number,
@@ -71,7 +73,9 @@ public :
 	      const std::string& departure_time,
 		  const std::string& terminal_time,
 		  const std::string& boxes_file);
-	//unsigned sum_seat(const std::string& seat_type);
+	Seat* find_seat_type(const std::string& seat_type);
+	Box* find_box(const std::string& seat_type);
+
 private :
 	std::string boxes_file;
 	std::fstream boxes_data;
@@ -86,6 +90,7 @@ public :
 	std::vector<Train> trains;
 public :
 	Trains(const std::string& trains_file);
+	Train* find_train(const std::string& train_number);
 private :
 	std::string trains_file;	
 	std::fstream trains_data;
@@ -95,14 +100,30 @@ private :
 class Ticket
 {
 public:
+	std::string passenger_name;
 	std::string train_number;
 	std::string departure_station;
 	std::string terminal_station;
 	std::string departure_time;
 	std::string terminal_time;
+	std::string box_number;
+	std::string seat_number;
 	std::string seat_type;
 	std::string seat_price;
-	std::string passenger_name;
 
+public :
+	//Ticket() = default;
+	Ticket(
+	const std::string passenger_name,
+	const std::string train_number,
+	const std::string departure_station,
+	const std::string terminal_station,
+	const std::string departure_time,
+	const std::string terminal_time,
+	const std::string box_number,
+	const std::string seat_number,
+	const std::string seat_type,
+	const std::string seat_price
+	);
 };
 #endif // Trains_Managing

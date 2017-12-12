@@ -1,8 +1,9 @@
 #ifndef Users_Managing
 #define Users_Managing
-#define _CRT_SECURE_NO_WARNINGS
+
 
 #include"Tools.h"
+#include"Trains_Managing.h"
 
 #include<iostream>
 #include<fstream>
@@ -11,6 +12,27 @@
 #include<conio.h>
 #include<ctime>
 
+class Order
+{
+public:
+	std::string order_number;
+	std::string booking_time;
+	std::vector<Ticket> tickets;//Need to initialize
+
+public:
+	Order(
+		const std::string& order_number,
+		const std::string& booking_time,
+		const std::string& tickets_file);// For reading data from file 
+	Order(unsigned& passenger_order_amount, const std::vector<Ticket> tickets);// For creating an Order object during system running
+private :
+	std::string tickets_file;
+	std::fstream tickets_data;
+private:
+	std::string generate_order_number(unsigned& order_amount);
+	std::string generate_booking_time();
+	void read_in();
+};
 class User
 {
 public :
@@ -21,21 +43,27 @@ public :
 	User(const std::string& name, const std::string& password);
 	void receive_password();
 	void change_password();
-private :
+protected :
 	std::string user_decision;
 };
 class Passenger : public User
 {
 public :
-	// 需要设计订单信息
-	std::string order_number;
-	std::vector<std::string> orders;
+	std::vector<Order> orders;
+	unsigned order_amount;
 
 public :
 	Passenger() = default;
 	Passenger(const std::string& name, const std::string& password);
-	void book_trains();
+	Passenger(const std::string& name, const std::string& password, const std::string& orders_file);
+	void book_trains(Trains* curr_trains);
 	void return_tickets();
+private :
+	std::string orders_file;
+	std::fstream orders_data;
+
+private :
+	void read_in();
 };
 class Manager : public User
 {
@@ -53,6 +81,8 @@ class Users
 public:
 	std::vector<Passenger> passengers;
 	std::vector<Manager> managers;
+	unsigned passenger_amount;// Now is not utilized
+	unsigned manager_amount;
 public :
 	Users() = default;
 	Users(const std::string& passengers_file, 
@@ -63,7 +93,7 @@ private :
 	std::string passengers_file;
 	std::string managers_file;
 	std::fstream users_data;
-	size_t manager_account;
+	
 private :
 	void read_in();
 	
@@ -98,4 +128,5 @@ template<typename T> void Users::update_password(const std::string& status, T& u
 	}
 	users_data.close();
 }
+
 #endif // Users_Managing 
