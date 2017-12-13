@@ -65,6 +65,7 @@ public :
 	std::string terminal_time;
 	std::list<Box> boxes;
 	std::vector<Seat> seats;
+	std::string boxes_file;
 	//std::list<Station> way_stations;
 public :
 	Train(const std::string& number,
@@ -75,27 +76,13 @@ public :
 		  const std::string& boxes_file);
 	Seat* find_seat_type(const std::string& seat_type);
 	Box* find_box(const std::string& seat_type);
-
+	Box* find_box(const unsigned& box_number);
 private :
-	std::string boxes_file;
 	std::fstream boxes_data;
 private :
 	void read_in();
 
 
-};
-class Trains
-{
-public :
-	std::vector<Train> trains;
-public :
-	Trains(const std::string& trains_file);
-	Train* find_train(const std::string& train_number);
-private :
-	std::string trains_file;	
-	std::fstream trains_data;
-private :
-	void read_in();
 };
 class Ticket
 {
@@ -112,7 +99,6 @@ public:
 	std::string seat_price;
 
 public :
-	//Ticket() = default;
 	Ticket(
 	const std::string passenger_name,
 	const std::string train_number,
@@ -125,5 +111,20 @@ public :
 	const std::string seat_type,
 	const std::string seat_price
 	);
+};
+class Trains
+{
+public:
+	std::vector<Train> trains;
+	std::string trains_file;
+public:
+	Trains(const std::string& trains_file);
+	Train* find_train(const std::string& train_number);
+	void add_seat(const Ticket& ticket);
+private:
+
+	std::fstream trains_data;
+private:
+	void read_in();
 };
 #endif // Trains_Managing

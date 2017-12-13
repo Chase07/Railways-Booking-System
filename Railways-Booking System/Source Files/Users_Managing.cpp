@@ -28,9 +28,18 @@ void User::change_password()
 		cout << "\nPLZ input your new password:";
 		receive_password();
 		temp_password = password;
-		cout << "\n\nPLZ verify your new password:";
+		cout << "\nPLZ verify your new password:";
 		receive_password();
-		if (password == original_password)
+		if (password != temp_password)
+		{
+			password = original_password;
+			cerr << "\n\nTwo passwords is not the same!";
+			cout << "\nWould you want to retry?[Y/N]";
+			IC.filtered_in() >> user_decision;
+			if (user_decision == "Y" || user_decision == "y") { continue; }
+			else if (user_decision == "N" || user_decision == "n") { break; }		
+		}
+		else if (password == original_password)
 		{
 			cerr << "\n\nThe new password is same as the original password!";
 			cout << "\nWould you want to retry?[Y/N]";
@@ -38,34 +47,20 @@ void User::change_password()
 			if (user_decision == "Y" || user_decision == "y") { continue; }
 			else if (user_decision == "N" || user_decision == "n") { break; }
 		}
-		else if (password != temp_password)
-		{
-			password = original_password;
-			cerr << "\n\nTwo passwords is not the same!";
-			cout << "\nWould you want to retry?[Y/N]";
-			IC.filtered_in() >> user_decision;
-			if (user_decision == "Y" || user_decision == "y") { continue; }
-			else if (user_decision == "N" || user_decision == "n") { break; }
-		}
 		else {
-			cout << "\n\nYou already changed your password! Enter any key to return.";
+			cout << "\n\nYou already changed your password! Enter any key to return...";
 			_getch();
 			break;
 		}		
 	}	
 }
 Passenger::Passenger(
-	const std::string& name,
-	const std::string& password) :
-	User(name, password),
-	order_amount(0) {}
-Passenger::Passenger(
 	const std::string& name, 
 	const std::string& password,
 	const std::string& orders_file) :
 	User(name, password),
 	orders_file(orders_file) {
-	read_in();
+	read_in_orders();
 }
 void Passenger::book_trains(Trains* curr_trains)
 {
@@ -135,7 +130,7 @@ void Passenger::book_trains(Trains* curr_trains)
 							IC1.add_accept_char(' ');
 							IC1.set_accept_amount(20);// The length of passenger's name
 							string passenger_name;
-							vector<Ticket> temp_tickets;
+							list<Ticket> temp_tickets;
 
 							/*
 							Verify and draw each ticket  
@@ -148,7 +143,7 @@ void Passenger::book_trains(Trains* curr_trains)
 								{
 									cout << "\nPLZ type in the No." + SC.num_to_str(counter + 1) + " passenger's name:";
 									getline(IC1.filtered_in(), passenger_name);
-									temp_tickets.push_back(Ticket(//ºÎ´¦´æ·Å
+									temp_tickets.push_back(Ticket(
 										passenger_name,
 										booking_train->number,
 										booking_train->departure_station,
@@ -171,7 +166,11 @@ void Passenger::book_trains(Trains* curr_trains)
 								}
 							}
 							// Add an order
-							orders.push_back(Order(++order_amount, temp_tickets));
+							orders.push_back(Order(
+								++order_amount,
+								temp_tickets,
+								"Data Files/Users_Info/Tickets/" + name + "/" // The complete path name will finished by Order constructor  
+							));
 							cout << "\nYour reservation is successful!";
 							cout << "\nHitting any key to return main menu...";
 							_getch();
@@ -201,18 +200,79 @@ void Passenger::book_trains(Trains* curr_trains)
 	}	
 
 }
+bool Passenger::erase_order(const std::string& order_number)
+{
+	for (list<Order>::iterator curr = orders.begin(); curr != orders.end(); ++curr)
+	{
+		if (curr->order_number == order_number)
+		{
+			order_amount - 1 != 4294967295 ? --order_amount : order_amount;
+			orders.erase(curr);
+			return true;
+		}
+	}
+	return false;
+}
+Order* Passenger::find_order(const std::string& order_number)
+{
+	for (auto& curr_order : orders)
+	{
+		if (curr_order.order_number == order_number)
+		{
+			return &curr_order;
+		}
+	}
+	return nullptr;
+}
 Manager::Manager(
 	const std::string& name, 
 	const std::string& password, 
 	const std::string& job_number) : 
 	User(name, password), 
 	job_number(job_number) {}
+Passenger* Manager::info_of_passengers(vector<Passenger>& passengers)
+{
+	Input_Control IC1;
+	IC1.set_accept_amount(16);
+	IC1.add_accept_range('A', 'Z');
+	IC1.add_accept_range('a', 'z');
+	IC1.add_accept_range('0', '9');
+	IC1.add_accept_char(' ');
+	IC1.enable_esc();
+	Input_Control IC2("YyNn", 1);
+	string passenger_name;
+
+	while (true)
+	{
+		cout << "\nPLZ select a singel passenger to see the details:";
+		getline(IC1.filtered_in(), passenger_name);
+		if (passenger_name != "\x1b")
+		{
+			for (auto& curr_passenger : passengers)
+			{
+				if (curr_passenger.name == passenger_name)
+				{
+					return &curr_passenger;
+				}
+			}
+			cout << "\nYou may select an nonexistent passenger...";
+			cout << "\nWould you want to retry?[Y/N]:";
+			IC2.filtered_in() >> user_decision;
+			if (user_decision == "Y" || user_decision == "y") { continue; }
+			else if (user_decision == "N" || user_decision == "n") { return nullptr; }
+		}
+		else {
+			return nullptr;
+		}
+	}
+	
+}
 Users::Users(
 	const std::string& passengers_file, 
 	const std::string& managers_file) :
 	passengers_file(passengers_file), 
 	managers_file(managers_file) {
-	read_in();
+	read_in_users();
 	passenger_amount = static_cast<unsigned>(passengers.size());
 	manager_amount = static_cast<unsigned>(managers.size());
 }
@@ -239,15 +299,44 @@ string Users::generate_job_number()
 	order_number(order_number),
 	booking_time(booking_time),
 	tickets_file(tickets_file){
-	read_in();
+	read_in_tickets();
+	ticket_amount = static_cast<unsigned>(tickets.size());
 }
 Order::Order(
 	unsigned& order_amount,
-	const std::vector<Ticket> tickets) :
+	const std::list<Ticket> tickets,
+	const std::string& tickets_file) :
 	order_number(generate_order_number(order_amount)),
 	booking_time(generate_booking_time()),
-	tickets(tickets){}
-
+	tickets(tickets),
+	ticket_amount(static_cast<unsigned>(tickets.size())){
+	// Supplement the path name for tickets_file
+	this->tickets_file = tickets_file + order_number + "_tickets.txt";
+}
+Ticket* Order::find_ticket(const std::string& passenger_name)
+{
+	for (auto& curr : tickets)
+	{
+		if (curr.passenger_name == passenger_name)
+		{
+			return &curr;
+		}
+	}
+	return nullptr;
+}
+bool Order::erase_ticket(const std::string& passenger_name)
+{
+	for (list<Ticket>::iterator curr = tickets.begin(); curr != tickets.end(); ++curr)
+	{
+		if (curr->passenger_name == passenger_name)
+		{
+			ticket_amount - 1 != 4294967295 ? --ticket_amount : ticket_amount;
+			tickets.erase(curr);
+			return true;
+		}
+	}
+	return false;
+}
 /*
  * Private Part
  */
@@ -271,10 +360,9 @@ std::string Order::generate_order_number(unsigned& passenger_order_amount)
 }
 std::string Order::generate_booking_time()
 {
-	Time now;
-	return now.date_and_now;
+	return Time().date_and_now;
 }
-void Users::read_in()
+void Users::read_in_users()
 {
 	string temp_line;
 	/*
@@ -297,7 +385,7 @@ void Users::read_in()
 			if (SM.pieces.size() == 2)
 			{
 				passengers.push_back(Passenger(
-					SM.pieces.at(0),
+					SM.pieces.at(0),// passenger's name
 					SM.pieces.at(1),
 					"Data Files/Users_Info/Orders/" + SM.pieces.at(0) + "_orders.txt"
 				));
@@ -315,7 +403,7 @@ void Users::read_in()
 	}
 		
 	/*
-	Read in the passengers_data
+	Read in the managers_data
 	*/
 	users_data.open(managers_file, fstream::in);
 	if (users_data.fail())
@@ -347,7 +435,7 @@ void Users::read_in()
 		users_data.close();
 	}
 }
-void Passenger::read_in() {
+void Passenger::read_in_orders() {
 	/*
 	Read in the orders_data
 	*/
@@ -355,10 +443,12 @@ void Passenger::read_in() {
 	orders_data.open(orders_file, fstream::in);
 	if (orders_data.fail())
 	{
+		// This is a new passenger, having no any orders
 		order_amount = 0;
 	}
 	else
 	{
+
 		while (getline(orders_data, temp_line))
 		{
 			String_Manipulation SM(temp_line);
@@ -384,8 +474,7 @@ void Passenger::read_in() {
 		orders_data.close();
 	}
 }
-
-void Order::read_in()
+void Order::read_in_tickets()
 {
 	string temp_line;
 	tickets_data.open(tickets_file, fstream::in);

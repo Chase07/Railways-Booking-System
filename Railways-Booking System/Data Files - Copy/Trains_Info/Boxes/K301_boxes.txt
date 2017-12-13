@@ -1,8 +1,8 @@
-hard_seat       1               93              98              135.5           
-hard_seat       2               91              98              135.5           
-hard_seat       3               92              98              135.5           
-hard_seat       4               96              98              135.5           
-hard_seat       5               95              98              135.5           
+hard_seat       1               98              98              135.5           
+hard_seat       2               98              98              135.5           
+hard_seat       3               98              98              135.5           
+hard_seat       4               98              98              135.5           
+hard_seat       5               98              98              135.5           
 hard_seat       6               98              98              135.5           
 hard_seat       7               98              98              135.5           
 hard_seat       8               98              98              135.5           

@@ -8,6 +8,8 @@
 #include<iostream>
 #include<sstream>
 #include<ctime>
+#include<io.h>
+#include<direct.h>
 #include<conio.h>
 
 class String_Manipulation
@@ -18,6 +20,7 @@ public :
 public :
 	String_Manipulation() = default;
 	String_Manipulation(const std::string& source);
+	void reset_str(const std::string& source);
 	void add_piece(const std::string& piece);
 	void washing(std::string& dirty_str);
 	void chopping(const std::string& cut = " \t\r\n", const unsigned& choise = 1);
@@ -42,7 +45,17 @@ std::string String_Manipulation::num_to_str(const T& number)
 	return a_str.str();
 
 }
+class File_Managing
+{
+public :
+	File_Managing() = default;
 
+public :
+	bool mkdir(const std::string& path);
+	bool rmfile(const std::string& path);
+private :
+	std::string path_name;
+};
 class Input_Control
 {
 public :
@@ -69,12 +82,14 @@ public :
 		const char& end_char);
 	void set_accept_amount(
 		const unsigned& amount);
-	
+	void enable_esc();
+	void disable_esc();
 	void set_echo(const char& echo);
 private :
 	std::unordered_set<char> accept;
 	unsigned amount;
 	char echo;
+	char esc;
 	std::string accept_istream;
 	std::istringstream filtered_istream;
 

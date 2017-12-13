@@ -1,4 +1,4 @@
-economic_seat   1               89              98              452.5           
+economic_seat   1               98              98              452.5           
 economic_seat   2               98              98              452.5           
 economic_seat   3               98              98              452.5           
 economic_seat   4               98              98              452.5           
@@ -11,5 +11,5 @@ economic_seat   10              98              98              452.5
 business_seat   11              20              20              737.5           
 business_seat   12              20              20              737.5           
 business_seat   13              20              20              737.5           
-first_seat      14              3               10              1429.5          
-first_seat      15              8               10              1429.5          
+first_seat      14              2               10              1429.5          
+first_seat      15              10              10              1429.5          

@@ -7,22 +7,25 @@ using namespace::std;
 /*
  * Public Part
  */
-System::System(): 
+System::System(
+	const std::string& trains_file,
+	const std::string& passengers_file,
+	const std::string& managers_file) :
+	/*trains_file(trains_file),
+	passengers_file(passengers_file),
+	managers_file(managers_file),*/
 	user_decision(""), 
-	Infa(), 
+	Infa(),
+	trains_manager(trains_file),
+	users(passengers_file, managers_file),
 	curr_user(), 
-	users("Data Files/Users_Info/passengers.txt", 
-		  "Data Files/Users_Info/managers.txt"), 
 	curr_manager(nullptr), 
-	curr_passenger(nullptr),
-	trains("Data Files/Trains_Info/Trains.txt") {}
+	curr_passenger(nullptr) {}
 void System::Run()
 {	
 	launch();
 	//Infa.trainsIF();
 }
-
-
 /*
  * Private Part
  */
@@ -44,13 +47,12 @@ void System::main_meun_option()
 		receive_option();
 		switch (stoul(user_decision))
 		{
-			case 1: {
-				system("cls");
+			case 1: {			
 				/*
 				1.Searh Trains
-				*/			
+				*/		
+				system("cls");
 				search_trains();
-
 				continue;
 			}
 			case 2: {
@@ -86,13 +88,12 @@ void System::main_meun_option()
 			}		
 		}
 	}
-	
 }
-void System::manager_meun_option()
+void System::manager_meun_option(Manager& curr_manager)
 {
 	while (true)
 	{
-		Infa.managerIF();
+		Infa.managerIF(curr_manager.name);
 		receive_option();
 
 		switch (stoul(user_decision))
@@ -102,13 +103,15 @@ void System::manager_meun_option()
 				/*
 				1.Add Trains
 				*/
+				//curr_manager.add_trains();
 				continue;
 			}
 			case 2: {
 				system("cls");
 				/*
 				2.List of Passenagers
-				*/				
+				*/
+				info_of_passengers();
 				continue;
 			}
 			case 3: {
@@ -116,15 +119,14 @@ void System::manager_meun_option()
 				/*
 				3.Change password
 				*/
-				curr_manager->change_password();				
-				users.update_password("Manager", *curr_manager);
+				curr_manager.change_password();	
 				continue;
 			}
 			case 4: {
 				/*
 				4.Return to Main-menu
 				*/
-				curr_manager = nullptr;
+				this->curr_manager = nullptr;
 				main_meun_option();
 				continue;
 			}
@@ -143,11 +145,11 @@ void System::manager_meun_option()
 		}
 	}
 }
-void System::passneger_meun_option()
+void System::passneger_meun_option(Passenger& curr_passenger)
 {
 	while (true)
 	{
-		Infa.passengerIF();
+		Infa.passengerIF(curr_passenger.name);
 		receive_option();
 
 		switch (stoul(user_decision))
@@ -163,8 +165,11 @@ void System::passneger_meun_option()
 			case 2: {
 				system("cls");
 				/*
-				2.Return Tickets
+				2.List orders
 				*/
+				Infa.ordersIF(curr_passenger.orders);
+				cout << "You can hit any key to return...";
+				_getch();
 				continue;
 			}
 			case 3: {
@@ -172,16 +177,14 @@ void System::passneger_meun_option()
 				/*
 				3.Change password
 				*/
-				curr_passenger->change_password();
-				users.update_password("Passenger", *curr_passenger);
+				curr_passenger.change_password();
 				continue;
 			}
 			case 4: {
 				/*
-				4.Return to Main-menu
+				4.Return Tickets
 				*/
-				curr_passenger = nullptr;
-				main_meun_option();
+				return_tickets();
 				continue;
 			}
 			case 5: {
@@ -191,6 +194,13 @@ void System::passneger_meun_option()
 				update_files();
 				exit_system();
 				continue;
+			}
+			case 6: {
+				/*
+				6.Return to Main-menu
+				*/
+				this->curr_passenger = nullptr;
+				main_meun_option();
 			}
 			default: {
 				cout << "\nSuch an option doesn't exist!" << endl;
@@ -213,7 +223,7 @@ void System::login()
 		curr_manager = check_id(curr_user, users.managers);
 		if(curr_manager != nullptr )
 		{		
-			manager_meun_option();
+			manager_meun_option(*curr_manager);
 		}
 		else { 
 			cerr << "\nPlZ hitting any key to return main menu..."; 
@@ -227,7 +237,7 @@ void System::login()
 		curr_passenger = check_id(curr_user, users.passengers);
 		if(curr_passenger != nullptr)
 		{ 		
-			passneger_meun_option();
+			passneger_meun_option(*curr_passenger);
 		}
 		else {
 			cerr << "\nPLZ hitting any key to return main menu...";
@@ -263,7 +273,7 @@ void System::sign_up()
 		new_user.receive_password();
 		if (new_user.password != temp_password)
 		{
-			cerr << "\n\nTwo passwords is not the same!";
+			cerr << "\nTwo passwords is not the same!";
 			cerr << "\nWould you want to retry?[Y/N]";
 			IC.filtered_in() >> user_decision;
 			if (user_decision.at(0) == 'Y' || user_decision.at(0) == 'y') { continue; }
@@ -280,16 +290,15 @@ void System::sign_up()
 					new_user.password, 
 					users.generate_job_number()
 				));
-				/////////////////
 				curr_manager = get_id(new_user, users.managers);
 				if (curr_manager != nullptr)
 				{				
-					cout << "\n\nThe resistration is successful! Hit any key to menu...";
+					cout << "\nThe resistration is successful! Hit any key to menu...";
 					_getch();
-					manager_meun_option();
+					manager_meun_option(*curr_manager);
 				}
 				else {
-					cout << "\n\nThe resistration is failed! Hit any key to main menu...";
+					cout << "\nThe resistration is failed! Hit any key to main menu...";
 					_getch();
 				}				
 				break;
@@ -299,14 +308,15 @@ void System::sign_up()
 				// The new user is a passenger
 				users.passengers.push_back(Passenger(
 					new_user.name,
-					new_user.password
+					new_user.password,
+					"Data Files/Users_Info/Orders/" + new_user.name + "_orders.txt"
 				));
 				curr_passenger = get_id(new_user, users.passengers);
 				if (curr_passenger != nullptr)
 				{				
 					cout << "\n\nThe resistration is successful! Hit any key to menu...";
 					_getch();
-					passneger_meun_option();
+					passneger_meun_option(*curr_passenger);
 				}
 				else
 				{
@@ -336,9 +346,10 @@ void System::search_trains() {
 	cin >> terminal;
 	search_trains(departure, terminal);
 }
-void System::search_trains(std::string& departure, std::string& terminal) {
+void System::search_trains(std::string& departure, std::string& terminal) 
+{
 	list<const Train*> suited_trains;
-	for (auto& train : trains.trains)
+	for (auto& train : trains_manager.trains)
 	{
 		if (train.departure_station == departure && train.terminal_station == terminal)
 		{
@@ -347,14 +358,14 @@ void System::search_trains(std::string& departure, std::string& terminal) {
 	}
 	if (suited_trains.size() != 0)
 	{
-		Infa.trainsIF(suited_trains);
+		Infa.trainsIF(suited_trains);// Show the information of trains
 		if(curr_passenger != nullptr)
 		{
-			curr_passenger->book_trains(&trains);
+			curr_passenger->book_trains(&trains_manager);
 		}
 		if (curr_passenger == nullptr)
 		{
-			cout << "You can hit any key at any time to return main menu...";
+			cout << "\nYou can hit any key at any time to return main menu...";
 			_getch();
 		}
 	}
@@ -365,10 +376,290 @@ void System::search_trains(std::string& departure, std::string& terminal) {
 	}
 	
 }
+void System::info_of_passengers()
+{
+	while (true)
+	{
+		Infa.info_of_passengersIF(users.passengers);
+		if (curr_manager != nullptr)
+		{
+			curr_passenger = curr_manager->info_of_passengers(users.passengers);
+			if (curr_passenger != nullptr)
+			{
+				Infa.ordersIF(curr_passenger->orders);
+			}
+			else { break; }
+		}
+		else
+		{
+			cerr << "\nFatal error occured in search_trains function!";
+			cout << "\nYou can hit any key to end up...";
+			_getch();
+			_exit(1);
+		}	
+	}
+}
+void System::return_tickets()
+{
+	Input_Control IC1('0', '9', 10);
+	Input_Control IC2("YyNn", 1);
+	Input_Control IC3;
+	IC3.set_accept_amount(20);
+	IC3.set_accept_range('A', 'Z');
+	IC3.add_accept_range('a', 'z');
+	IC3.add_accept_char(" _");
+	string temp_order_number;
+	string temp_passenger_name;
+	Order* curr_order;
+	Ticket* curr_ticket;
+
+	Infa.ordersIF(curr_passenger->orders);
+	while (true)
+	{
+		cout << "\nPLZ select the order by typing the order number:";
+		IC1.filtered_in() >> temp_order_number;
+		curr_order = curr_passenger->find_order(temp_order_number);
+		if (curr_order != nullptr)
+		{
+			while (true)
+			{
+				cout << "\nPLZ type the passenger's name to choose ticket:";
+				IC3.filtered_in() >> temp_passenger_name;
+				curr_ticket = curr_order->find_ticket(temp_passenger_name);
+				if (curr_ticket != nullptr)
+				{
+					// Add the train seat
+					trains_manager.add_seat(*curr_ticket);
+					if (false == curr_order->erase_ticket(curr_ticket->passenger_name))
+					{
+						cerr << "\nFatal error occur in erase_ticket function...";
+						cout << "\nNow hitting any key to end up...";
+						_getch();
+						_exit(1);
+					}
+					// minus the ticket or order if ticket_amount become zero
+					if (curr_order->ticket_amount == 0)
+					{
+						File_Managing FM;
+						FM.rmfile(curr_order->tickets_file);// Delete the ticket file
+						if (false == curr_passenger->erase_order(curr_order->order_number))
+						{
+							cerr << "\nFatal error occur in erase_order function...";
+							cout << "\nNow hitting any key to end up...";
+							_getch();
+							_exit(1);
+						}
+					}
+					cout << "\nYou have returned the " + temp_passenger_name + "'s ticket!";
+					cout << "\nNow hitting any key to return...";
+					_getch();
+					break;
+				}
+				else
+				{
+					cerr << "\nYou have typed a wrong passenger's name...";
+					cout << "\nWould you want to retry?[Y/N]:";
+					IC2.filtered_in() >> user_decision;
+					if (user_decision.at(0) == 'Y' || user_decision.at(0) == 'y') { continue; }
+					else if (user_decision.at(0) == 'N' || user_decision.at(0) == 'n') { break; }
+				}
+			}
+			break;
+
+		}
+		else
+		{
+			cerr << "\nYou don't have such order...";
+			cout << "\nWould you want to retry?[Y/N]:";
+			IC2.filtered_in() >> user_decision;
+			if (user_decision.at(0) == 'Y' || user_decision.at(0) == 'y') { continue; }
+			else if (user_decision.at(0) == 'N' || user_decision.at(0) == 'n') { break; }
+		}
+	}
+}
 void System::exit_system() { _exit(0); }
 void System::update_files()
 {
+	std::string temp_line;
+	String_Manipulation SM;
+	File_Managing FM;
 
+	/*
+	Update the passengers_data 
+	*/
+	// OK
+	data_stream.close();
+	data_stream.open(users.passengers_file, fstream::out);// Open and empty it
+	if (data_stream.fail())
+	{
+		cerr << "\nFail to open " + users.passengers_file + " while updating!";
+		cout << "\nPLZ check the data file, hitting any key to exit...";
+		_getch();
+		_exit(1);
+	}
+	else
+	{
+		for (auto& temp_passenger : users.passengers)
+		{
 
+			data_stream << setiosflags(ios::left)
+				<< setw(20) << temp_passenger.name
+				<< setw(20) << temp_passenger.password << endl;		
+		}
+	}
 
+	/*
+	Update the orders_data
+	*/
+	for (auto& temp_passenger : users.passengers)
+	{
+		data_stream.close();
+		data_stream.open(temp_passenger.orders_file, fstream::out);// Open and empty it
+		if (data_stream.fail())
+		{
+			cerr << "\nFail to open " + temp_passenger.orders_file + " while updating!";
+			cout << "\nPLZ check the data file, hitting any key to exit...";
+			_getch();
+			_exit(1);
+		}
+		else
+		{
+			for (auto& temp_order : temp_passenger.orders)
+			{
+				data_stream << setiosflags(ios::left)
+					<< setw(20) << temp_order.order_number
+					<< setw(20) << temp_order.booking_time << endl;
+			}
+		}
+	}
+
+	/*
+	Update the tickets_data
+	*/
+	for (auto& temp_passenger : users.passengers)
+	{
+		for (auto& temp_order : temp_passenger.orders)
+		{
+			data_stream.close();
+			data_stream.open(temp_order.tickets_file, fstream::out);// Open and empty it
+			if (data_stream.fail())
+			{
+				SM.reset_str(temp_order.tickets_file);
+				SM.chopping("\\/");
+				SM.pieces.pop_back();
+				if (true == FM.mkdir(SM.sewing("/")))
+				{
+					data_stream.open(temp_order.tickets_file, fstream::out);
+					if (data_stream.fail())
+					{
+						cerr << "\nFail to open " + temp_order.tickets_file + " while updating!";
+						cout << "\nPLZ check the data file, hitting any key to exit...";
+						_getch();
+						_exit(1);
+					}
+				}
+				else
+				{
+					cerr << "\nFail to creat " + SM.sewing("/") + " while updating!";
+					cout << "\nPLZ check the data file, hitting any key to exit...";
+					_getch();
+					_exit(1);
+				}
+				
+			}
+			/*
+			While runing here, the data_stream is absolutely OK!
+			*/
+			for (auto& temp_ticket : temp_order.tickets)
+			{
+				data_stream << setiosflags(ios::left)
+					<< setw(16) << temp_ticket.passenger_name
+					<< setw(16) << temp_ticket.train_number
+					<< setw(16) << temp_ticket.departure_station
+					<< setw(16) << temp_ticket.terminal_station
+					<< setw(16) << temp_ticket.departure_time
+					<< setw(16) << temp_ticket.terminal_time
+					<< setw(16) << temp_ticket.box_number
+					<< setw(16) << temp_ticket.seat_number
+					<< setw(16) << temp_ticket.seat_type
+					<< setw(16) << temp_ticket.seat_price << endl;
+			}
+		}
+	}
+
+	/*
+	Update the managers_data
+	*/
+	data_stream.close();
+	data_stream.open(users.managers_file, fstream::out);// Open and empty it
+	if (data_stream.fail())
+	{
+		cerr << "\nFail to open " + users.managers_file + " while updating!";
+		cout << "\nPLZ check the data file, hitting any key to exit...";
+		_getch();
+		_exit(1);
+	}
+	else
+	{
+		for (auto& temp_manager : users.managers)
+		{
+			data_stream << setiosflags(ios::left)
+				<< setw(20) << temp_manager.name
+				<< setw(20) << temp_manager.password
+				<< setw(20) << temp_manager.job_number << endl;
+		}
+	}
+
+	/*
+	Update the trains_data
+	*/
+	data_stream.close();
+	data_stream.open(trains_manager.trains_file, fstream::out);// Open and empty it
+	if (data_stream.fail())
+	{
+		cerr << "\nFail to open " + trains_manager.trains_file + " while updating!";
+		cout << "\nPLZ check the data file, hitting any key to exit...";
+		_getch();
+		_exit(1);
+	}
+	else
+	{
+		for (auto& temp_train : trains_manager.trains)
+		{
+			data_stream << setiosflags(ios::left)
+				<< setw(16) << temp_train.number
+				<< setw(16) << temp_train.departure_station
+				<< setw(16) << temp_train.terminal_station
+				<< setw(16) << temp_train.departure_time
+				<< setw(16) << temp_train.terminal_time << endl;
+		}
+	}
+
+	/*
+	Update the boxes_data
+	*/
+	for (auto& temp_train : trains_manager.trains)
+	{
+		data_stream.close();
+		data_stream.open(temp_train.boxes_file, fstream::out);
+		if (data_stream.fail())
+		{
+			cerr << "\nFail to open " + temp_train.boxes_file + " while updating!";
+			cout << "\nPLZ check the data file, hitting any key to exit...";
+			_getch();
+			_exit(1);
+		}
+		else 
+		{
+			for (auto& temp_box : temp_train.boxes)
+			{
+				data_stream << setiosflags(ios::left)
+					<< setw(16) << temp_box.seat_type
+					<< setw(16) << SM.num_to_str(temp_box.number)
+					<< setw(16) << SM.num_to_str(temp_box.seat_left)
+					<< setw(16) << SM.num_to_str(temp_box.seat_amount)
+					<< setw(16) << SM.num_to_str(temp_box.seat_price) << endl;
+			}
+		}	
+	}
 }

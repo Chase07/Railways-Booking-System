@@ -1,0 +1,9 @@
+a               G1401           Nanchang        Guangzhou       07:27           11:48           1               1               economic_seat   452.5           
+s               G1401           Nanchang        Guangzhou       07:27           11:48           1               2               economic_seat   452.5           
+d               G1401           Nanchang        Guangzhou       07:27           11:48           1               3               economic_seat   452.5           
+f               G1401           Nanchang        Guangzhou       07:27           11:48           1               4               economic_seat   452.5           
+g               G1401           Nanchang        Guangzhou       07:27           11:48           1               5               economic_seat   452.5           
+h               G1401           Nanchang        Guangzhou       07:27           11:48           1               6               economic_seat   452.5           
+j               G1401           Nanchang        Guangzhou       07:27           11:48           1               7               economic_seat   452.5           
+k               G1401           Nanchang        Guangzhou       07:27           11:48           1               8               economic_seat   452.5           
+l               G1401           Nanchang        Guangzhou       07:27           11:48           1               9               economic_seat   452.5           

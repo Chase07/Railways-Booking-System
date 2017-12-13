@@ -9,6 +9,7 @@
 #include<fstream>
 #include<string>
 #include<vector>
+#include<list>
 #include<conio.h>
 #include<ctime>
 
@@ -17,21 +18,26 @@ class Order
 public:
 	std::string order_number;
 	std::string booking_time;
-	std::vector<Ticket> tickets;//Need to initialize
-
+	std::list<Ticket> tickets;
+	std::string tickets_file;
+	unsigned ticket_amount;
 public:
 	Order(
 		const std::string& order_number,
 		const std::string& booking_time,
 		const std::string& tickets_file);// For reading data from file 
-	Order(unsigned& passenger_order_amount, const std::vector<Ticket> tickets);// For creating an Order object during system running
+	Order(
+		unsigned& passenger_order_amount, 
+		const std::list<Ticket> tickets,
+		const std::string& tickets_file);// For creating an Order object during system running
+	Ticket* find_ticket(const std::string& passenger_name);
+	bool erase_ticket(const std::string& passenger_name);///////////
 private :
-	std::string tickets_file;
 	std::fstream tickets_data;
 private:
 	std::string generate_order_number(unsigned& order_amount);
 	std::string generate_booking_time();
-	void read_in();
+	void read_in_tickets();
 };
 class User
 {
@@ -49,21 +55,21 @@ protected :
 class Passenger : public User
 {
 public :
-	std::vector<Order> orders;
+	std::list<Order> orders;
 	unsigned order_amount;
-
+	std::string orders_file;
 public :
 	Passenger() = default;
-	Passenger(const std::string& name, const std::string& password);
 	Passenger(const std::string& name, const std::string& password, const std::string& orders_file);
 	void book_trains(Trains* curr_trains);
-	void return_tickets();
+	bool erase_order(const std::string& order_number);
+	Order* find_order(const std::string& order_number);
+	//void return_tickets();
 private :
-	std::string orders_file;
 	std::fstream orders_data;
-
+	Order* curr_order;
 private :
-	void read_in();
+	void read_in_orders();
 };
 class Manager : public User
 {
@@ -74,7 +80,7 @@ public :
 	Manager() = default;	
 	Manager(const std::string& name, const std::string& password, const std::string& job_number);
 	void add_trains();
-	void passengers_info();
+	Passenger* info_of_passengers(std::vector<Passenger>& passengers);
 };
 class Users
 {
@@ -83,6 +89,8 @@ public:
 	std::vector<Manager> managers;
 	unsigned passenger_amount;// Now is not utilized
 	unsigned manager_amount;
+	std::string passengers_file;
+	std::string managers_file;
 public :
 	Users() = default;
 	Users(const std::string& passengers_file, 
@@ -90,12 +98,10 @@ public :
 	template<typename T> void update_password(const std::string& status, T& user);
 	std::string generate_job_number();
 private :
-	std::string passengers_file;
-	std::string managers_file;
 	std::fstream users_data;
 	
 private :
-	void read_in();
+	void read_in_users();
 	
 };
 template<typename T> void Users::update_password(const std::string& status, T& user)
@@ -106,6 +112,7 @@ template<typename T> void Users::update_password(const std::string& status, T& u
 	std::string temp_line;
 	if (status == "Manager") { temp_file_name = managers_file; }
 	else if(status == "Passenger") { temp_file_name = passengers_file; }
+	
 	users_data.open(temp_file_name, fstream::in);
 	if (users_data.fail()) { cerr << "Fail to open " + status + "s' file!"; }
 	else

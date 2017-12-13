@@ -13,32 +13,41 @@
 #include<memory>
 
 class System {
-	friend void User::change_password();
 public:
-	System();
+	System(
+		const std::string& trains_file,
+		const std::string& passengers_file,
+		const std::string& managers_file);
 	void Run();
+	
 
 private:
+
 	std::string user_decision; 
 	Interface Infa;
+	Trains trains_manager;
 	Users users;
 	User curr_user;
 	Manager* curr_manager;
 	Passenger* curr_passenger;
-	Trains trains;
 	
+	std::fstream data_stream;
+
 private :
 	void launch();
 	void receive_option();
 	void main_meun_option();
-	void manager_meun_option();
-	void passneger_meun_option();
+	void manager_meun_option(Manager& curr_manager);
+	void passneger_meun_option(Passenger& curr_passenger);
 	void login();
 	void sign_up();
 	void search_trains();
 	void search_trains(
 		std::string& departure, 
 		std::string& terminal);
+	void info_of_passengers();
+	void return_tickets();
+	
 	void update_files();
 	void exit_system();
 	

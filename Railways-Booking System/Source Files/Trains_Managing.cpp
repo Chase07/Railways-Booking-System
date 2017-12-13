@@ -63,6 +63,17 @@ Box* Train::find_box(const std::string& seat_type)
 	}
 	return nullptr;
 }
+Box* Train::find_box(const unsigned& box_number)
+{
+	for(auto& curr_box: boxes)
+	{
+		if (curr_box.number == box_number)
+		{
+			return &curr_box;
+		}
+	}
+	return nullptr;
+}
 Trains::Trains(const std::string& trains_file) :
 	trains_file(trains_file) {
 	read_in();
@@ -74,6 +85,30 @@ Train* Trains::find_train(const std::string& train_number)
 		if (train.number == train_number) { return &train; }
 	}
 	return nullptr;
+}
+void Trains::add_seat(const Ticket& ticket)
+{
+	Train* curr_train;
+	Box* curr_box;
+	Seat* curr_seat_type;
+
+	curr_train = find_train(ticket.train_number);
+	if (curr_train != nullptr)
+	{
+		curr_box = curr_train->find_box(stoul(ticket.box_number));
+		curr_seat_type = curr_train->find_seat_type(ticket.seat_type);
+		if (curr_box != nullptr && curr_seat_type != nullptr)
+		{
+			++curr_box->seat_left;
+			++curr_seat_type->seat_left;
+			return;
+		}
+		
+	}
+	cerr << "\nFatal error occur in add_seat function...";
+	cout << "\nNow hitting any key to end up...";
+	_getch();
+	_exit(1);
 }
 Ticket::Ticket(
 	const std::string passenger_name,

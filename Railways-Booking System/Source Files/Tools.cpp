@@ -5,6 +5,9 @@ using namespace::std;
  * Public Part
  */
 String_Manipulation::String_Manipulation(const std::string& source) : str(source) {}
+void String_Manipulation::reset_str(const std::string& source){
+	str = source;
+}
 void String_Manipulation::add_piece(const string& piece) {
 	pieces.push_back(piece);
 }
@@ -38,9 +41,10 @@ void String_Manipulation::chopping(const std::string& cut, const unsigned& chois
 			pos2 = str.find_first_of(cut, pos1);
 			pos2 == string::npos ? pos2 = size : pos2;// Judge whether pos2 points to the end of str
 			temp_str = str.substr(pos1, pos2 - pos1);
-			pieces.push_back(temp_str);
+			temp_str == "" ? temp_str : pieces.push_back(temp_str);
 
 			pos1 = str.find_first_not_of(cut, pos2);
+			pos1 == string::npos ? pos1 = size : pos1;
 		}
 	}
 	else if (choise == 2)
@@ -99,12 +103,37 @@ void String_Manipulation::clear(const std::string& what)
 		char_pieces.clear() :
 		what;
 }
-Input_Control::Input_Control() : echo(' ') {}
+bool File_Managing::mkdir(const std::string& path)
+{
+	String_Manipulation SM(path);
+	SM.chopping("\\/");
+	for (auto& curr_dir : SM.pieces)
+	{
+		path_name += curr_dir;
+		path_name += "/";
+		if (-1 == _access(path_name.c_str(), 6))
+		{
+			if (-1 == _mkdir(path_name.c_str())) 
+			{ return false; }
+		}
+	}
+	return true;
+}
+bool File_Managing::rmfile(const std::string& path)
+{
+	if (-1 == remove(path.c_str()))
+	{
+		return false;
+	}
+	return true;
+}
+Input_Control::Input_Control() : echo(' '), esc(' ') {}
 Input_Control::Input_Control(
 	const std::string& accept_char,
 	const unsigned& amount):
 	amount(amount),
-	echo(' '){
+	echo(' '),
+	esc(' ') {
 	set_accept_char(accept_char);
 }
 Input_Control::Input_Control(
@@ -112,7 +141,8 @@ Input_Control::Input_Control(
 	const char& end_char, 
 	const unsigned& amount):
 	amount(amount),
-	echo(' ') {
+	echo(' '),
+	esc(' '){
 	set_accept_range(beg_char, end_char);
 }
 std::istringstream& Input_Control::filtered_in(std::istream& in)
@@ -122,7 +152,14 @@ std::istringstream& Input_Control::filtered_in(std::istream& in)
 	accept_istream.clear();
 	filtered_istream.clear();
 	while ((curr_char = _getch()) != 13 || accept_istream.size() == 0)// Make sure receive somethings
-	{		
+	{
+		if (esc != ' ' && curr_char == esc) 
+		{
+			// While esc is enable
+			accept_istream.clear();
+			accept_istream += curr_char;
+			break; 
+		}
 		if (accept.find(curr_char) != accept.end() && temp_amount < amount)
 		{
 			++temp_amount;
@@ -188,6 +225,8 @@ void Input_Control::set_accept_amount(const unsigned& amount)
 {
 	this->amount = amount;
 }
+void Input_Control::enable_esc() { this->esc = '\x1b'; }
+void Input_Control::disable_esc() { this->esc = ' '; }
 void Input_Control::set_echo(const char& echo) { this->echo = echo; }
 Time::Time()
 {
